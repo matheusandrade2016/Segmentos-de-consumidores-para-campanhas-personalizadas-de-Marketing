@@ -1,49 +1,422 @@
-# History files
-.Rhistory
-.Rapp.history
+# Instalando meus Pacotes Pacotes
 
-# Session Data files
-.RData
-.RDataTmp
+# Melhora nossa forma para vizulizar os clustering 
+# install.packages("factoextra")
 
-# User-specific files
-.Ruserdata
+# Melhora nossa vizualição dos Clusters
+# install.packages("cluster")
+# install.packages("fpc")
 
-# Example code in package build process
-*-Ex.R
+# Ajuda Determinar nosso Numero de Cluster
+# install.packages("NbClust")
+# install.packages("clValid")
 
-# Output files from R CMD build
-/*.tar.gz
+# Para Calcular nossa Estatistica deHopkins
+# install.packages("clustertend") -> Obsoleto
+# install.packages("hopkins")
 
-# Output files from R CMD check
-/*.Rcheck/
+# Carregando Nossas Bibliotecas
 
-# RStudio files
-.Rproj.user/
+library(factoextra)
+library(cluster)
+library(fpc)
+library(NbClust)
+library(clValid)
+library(magrittr)
+library(clustertend)
+# library(hopkins)
 
-# produced vignettes
-vignettes/*.html
-vignettes/*.pdf
+# Carregando os dados
+dados_clientes_v1 <- read.csv("dados/dados_clientes.csv", stringsAsFactors = TRUE)
 
-# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
-.httr-oauth
+# Verificando nossos dados
+str(dados_clientes_v1)
 
-# knitr and R markdown default cache directories
-*_cache/
-/cache/
+# vendo os nomes de nossas colunas
+names(dados_clientes_v1)
 
-# Temporary files created by R markdown
-*.utf8.md
-*.knit.md
+# Vizualizando os Dados
+View(dados_clientes_v1)
 
-# R Environment Variables
-.Renviron
+# Vizualizando nossas estatisticas de Dados
+summary(dados_clientes_v1)
 
-# pkgdown site
-docs/
 
-# translation temp files
-po/*~
+# Análise Exploratória dos Dados 
 
-# RStudio Connect folder
-rsconnect/
+# Tabela de proporção do sexo dos clientes
+tabela_sexos = table(dados_clientes_v1$Sexo)
+
+# Verificando nossa Tabela ou Seja Feminimo Tem Mais 
+tabela_sexos
+
+# useNA = "ifany" --> Para verificarmos se Temos valores NA 
+# em nossa tabela, como não temos nao ira aparecer
+
+table(dados_clientes_v1$Sexo, useNA = "ifany")
+
+
+
+# Buscando valores missing para variáveis relacionadas a idade ou seja
+# nao temos valores NA
+summary(dados_clientes_v1$Idade)
+
+
+# Buscando a média de idade com nossa função Mean
+mean(dados_clientes_v1$Idade)
+
+
+
+# Barplot de proporção do sexo dos clientes Grafico de Barras
+
+#  main = "Proporção de Sexo dos Clientes" --> Titulo
+# ylab = "Total" --> eixo y
+# xlab = "Sexo" --> eixo X
+# col = rainbow(2) --> nossa cor dos dados
+# legend = rownames(tabela_sexos)) --> noissa legenda ou seja 
+# o titulo da tabela
+
+barplot(tabela_sexos,
+        main = "Proporção de Sexo dos Clientes",
+        ylab = "Total",
+        xlab = "Sexo",
+        col = rainbow(2),
+        legend = rownames(tabela_sexos))
+
+
+
+
+# Histograma com a distribuição de frequência das idades dos clientes
+hist(dados_clientes_v1$Idade,
+     col = "blue",
+     main = "Histogramas de Idades",
+     xlab = "Idade",
+     ylab = "Frequência",
+     labels = TRUE)
+
+
+
+
+# Boxplot para análise descritiva da idade
+boxplot(dados_clientes_v1$Idade, 
+        col = 3, 
+        main = "Boxplot Para Análise Descritiva da Idade")
+        
+
+
+
+# Histograma com a distribuição de frequência do salário mensal
+
+# Nomes das nossas colunas para buscar o Salario_Mensal_Milhar
+names(dados_clientes_v1)
+
+# Estatistica dos dados
+summary(dados_clientes_v1$Salario_Mensal_Milhar)
+
+# Gerando nosso Histograma
+
+# Com isso podermos vizualizar que a maioria dos Clientes
+# Ganham menos de 80 mil, e a outra parte ganha mais de 100 mil
+
+hist(dados_clientes_v1$Salario_Mensal_Milhar,
+     col = "#660033",
+     main = "Histograma de Salário Mensal",
+     xlab = "Salário Mensal",
+     ylab = "Frequência",
+     labels = TRUE)
+
+
+
+# Análise da Pontuação dos Clientes
+summary(dados_clientes_v1$Pontuacao_Gasto)
+
+
+# Gerand nosso Box Plot
+
+# horizontal = TRUE --> deixando em formato Horizontal
+
+boxplot(dados_clientes_v1$Pontuacao_Gasto,
+        horizontal = TRUE,
+        col = "#990000",
+        main = "BoxPlot Para Análise Descritiva da Pontuação do Cliente")
+
+
+
+# Gerando nosso histograma
+
+# Podemos vizualizar que em nossos graficos a Pontuação de Gastos
+# dos clientes chega em 50
+
+hist(dados_clientes_v1$Pontuacao_Gasto,
+     main = "Histograma de Pontuação de Gasto",
+     xlab = "Pontuação de Gasto",
+     ylab = "Frequência",
+     col = "#6600cc",
+     labels = TRUE)
+
+
+
+# Pré-Processamento dos Dados
+
+# Pré-processando e analisando os dados independente do sexo
+
+
+# Gerando nossa massa de dados novamente neste caso iremos retirar
+# nossa coluna 1 e 2 "ID" e "Sexo"
+
+# [,-c(1,2)] --> Retirando nossa coluna 1 e 2 
+
+dados_clientes_v2 <- dados_clientes_v1[,-c(1,2)]
+
+# Vizualizando nossos Dados
+head(dados_clientes_v2)
+
+# Padronizando as variáveis ou seja deixa na mesma escala
+
+# O algoritmo K-means precisa que os dados estejam na mesma escala para funcionar
+# corretamente. O motivo para isso é que o algoritmo utiliza a distância entre 
+# os pontos de dados para determinar a qual cluster eles pertencem. 
+# Se as variáveis estiverem em escalas diferentes, a distância entre os
+# pontos será distorcida, levando a resultados incorretos.
+
+# scale --> Normalizar nossos dados ou seja:
+# Media = 0
+# Desvio_Padrão = 1 
+
+dados_clientes_v2_scaled = scale(dados_clientes_v2)
+
+# Vizualizando nossos Dados
+head(dados_clientes_v2_scaled)
+
+
+# Avaliando a Tendência de Cluster : 
+
+# Estatística Hopkins para o conjunto de dados
+
+# A Estatística de Hopkins é uma medida da tendência de agrupamento em um 
+# conjunto de dados. Ela é usada para avaliar se os pontos de dados em um 
+# conjunto de dados estão agrupados ou se estão espalhados aleatoriamente.
+
+# A estatística varia entre 0 e 1. Um valor de 0 indica que os pontos de dados 
+# estão completamente agrupados, enquanto um valor de 1 indica que os pontos 
+# de dados estão completamente aleatórios.
+
+# A Estatística de Hopkins pode ser usada para:
+
+# Avaliar se um conjunto de dados é adequado para análise de cluster.
+# Selecionar o número de clusters para usar em um algoritmo de cluster.
+# Comparar diferentes algoritmos de cluster
+
+# Valores > 0.5 significam que o dataset não é "clusterizável"
+
+# Valores < 0.5 significam que o dataset é "clusterizável"
+
+# Quanto mais próximo de zero, melhor. 
+
+
+set.seed(123)
+?hopkins
+
+# Verificando nossos dados para nossa função Estatisca 
+
+#  n = nrow(dados_clientes_v2_scaled)-1) --> Nosso numero de Linha 
+
+hopkins(dados_clientes_v2_scaled, n = nrow(dados_clientes_v2_scaled)-1)
+# hopkins::hopkins(dados_clientes_v2_scaled, m = 1)
+
+# Valor = 0.3092891 indica que o dataset é "clusterizável".
+
+
+
+# K-means - Determinando o Número Ideal de Clusters
+
+# Pacote NbClust: 30 índices para determinar o número de clusters em um conjunto de dados.
+# Se index = 'all' - Executa 30 índices para determinar o número ideal de clusters.
+# Se index = "silhouette" - Usa uma medida para estimar a diferença entre clusters.
+# Um valor de silhueta mais alto é preferido para determinar o número ideal de clusters
+
+# Nossa Função 
+# ?NbClust
+
+# Testando nosso dados Opção 1 
+
+# distance = "euclidean" --> nossa função
+# min.nc = 2 --> minimo de Cluster
+#  max.nc = 15 --> maximo de Cluster
+# method = "kmeans" --> nosso Metodo
+# index = "silhouette" --> Usa uma medida para estimar a diferença entre clusters.
+
+num_clusters_opt1 <- NbClust(dados_clientes_v2_scaled,  
+                             distance = "euclidean",
+                             min.nc = 2, 
+                             max.nc = 15, 
+                             method = "kmeans",
+                             index = "silhouette")
+
+# Verificando nosso numero de Cluster com nossa função  "Best.nc"
+
+# Melhor numero de Cluster --> 6 
+
+num_clusters_opt1$Best.nc
+
+# Nosso indice de todos os cluster de 2 a 15 ou seja ira mostrar nosso calculos
+# ous seja podemos ver o numero 6 
+num_clusters_opt1$All.index
+
+
+# Opção 2:
+
+# neste caso iremos ultilizar todos os indices que a função ofereçe 
+
+# index = "all" --> Executa 30 índices para determinar o número ideal de clusters.
+
+num_clusters_opt2 <- NbClust(dados_clientes_v2_scaled,  
+                             distance = "euclidean", 
+                             min.nc = 2, 
+                             max.nc = 15, 
+                             method = "kmeans",
+                             index = "all")
+
+# Nosso RESUMO final de numero de Cluster pois nesta função a respota foi: 
+
+# De acordo com a regra da maioria, o melhor número de clusters é 2
+
+
+
+# Noso Primero Um método recomenda 6 clusters
+# Nosso Segundo recomenda 2. 
+
+
+# Decisão Final : Usaremos 4 clusters
+
+
+
+
+# Criação do Modelo K-Means e Análise de Cluster
+
+# Chamando nossa Função
+?kmeans
+
+# Criando Nosso modelo 
+
+# 4 --> numero de Clustering
+
+modelo <- kmeans(dados_clientes_v2_scaled, 4)
+print(modelo)
+
+# Verificando o tamanho dos clusters ou seja o tamanho do clusters
+modelo$size
+
+# Verificando o centro dos clusters ou seja nosso valores Centroides "Média"
+modelo$centers
+
+
+# Aplicando o ID dos clusters ao dataframe original
+
+# Nosso Numero de Cluster ou seja 1 a 4
+modelo$cluster
+
+# Gravando os dados em nosso conjuto de dados 1 pois la nosso dados
+# não estão normalizados e podemos vizualizar melhor 
+dados_clientes_v1$Cluster <- modelo$cluster
+
+# Olhando nosso dados
+View(dados_clientes_v1)
+
+# Nossa Função
+?aggregate
+
+# Aggrando nosos dados 
+
+# data = dados_clientes_v1 --> Nosso Dados
+# Idade --> Nossa coluna que iremos agregar
+# Cluster --> nossa coluna de cluster para a função Mé dia  
+# mean --> nossa função que precisamos passsar 
+
+# Média de idade por cluster ou seja media de idade para cada grupo
+aggregate(data = dados_clientes_v1, Idade ~ Cluster, mean)
+
+
+# Média de salário por cluster salario por grupos
+aggregate(data = dados_clientes_v1, Salario_Mensal_Milhar ~ Cluster, mean)
+
+
+# Média de pontuação de gasto por cluster ou seja que mais gastaram
+aggregate(data = dados_clientes_v1, Pontuacao_Gasto ~ Cluster, mean)
+
+
+
+
+# Média de idade e salário por cluster
+
+# cbind(Idade, Salario_Mensal_Milhar) --> pegando duas colunas 
+
+aggregate(data = dados_clientes_v1, cbind(Idade, Salario_Mensal_Milhar) ~ Cluster, mean)
+
+# Total de pessoas por sexo e por cluster ou seja neste caso as Mulheres a partir
+# do Grupo 2 apareçem mais que os Homens 
+
+# with --> para usarmos nossa coluna Sexo pois trata-se de uma variavel Categorica
+# String
+
+with(dados_clientes_v1, table(Sexo, Cluster))
+
+
+
+# Gerando noso Plot do Modelo
+
+# dados_clientes_v2_scaled --> Nosso Dataset em Noralizados para melhor
+# Vizualizção dos dados
+
+# col = modelo$cluster --> nossa coluna
+
+#  pch = 15 --> Controla o Tipo de Simbolo (1 a 25 ou especificado entre aspas)
+
+plot(dados_clientes_v2_scaled, col = modelo$cluster, pch = 15) 
+
+
+# Melhorando a Visualização
+# ?eclust --> vai gerar nosso calculos para nosso Cluster
+
+# Criando uma nova variavel para nossa função 
+
+# dados_clientes_v2_scaled --> Nossos Dados
+# "kmeans" --> nossa função 
+#  k = 4 --> numero de Clustering
+#  nstart = 25 --> ponto de inicio
+# graph = FALSE --> Não grafico computacional
+
+cluster_viz <- eclust(dados_clientes_v2_scaled, "kmeans", k = 4, nstart = 25, graph = FALSE)
+
+
+
+# Visualizando Clusters K-Means com outra função "fviz_cluster"
+# ?fviz_cluster
+
+# cluster_viz --> nosso dados criados a cima
+# geom = "point --> como iremos mostrar os dados
+# ellipse.type = "norm" --> como cada variavel caracteriaza os Clustrs 
+
+fviz_cluster(cluster_viz, geom = "point", ellipse.type = "norm")
+
+# Outra opção de visualização
+?clusplot
+
+# Mostrar nosso graficos mais de 1 
+par(c(1,1))
+
+# dados_clientes_v1 --> usando nosso dados originians 
+
+# dados_clientes_v1$Cluster --> fazendo nossa divisão por clustering
+
+# color=TRUE --> mostrar nossa cor 
+
+# shade=TRUE --> sinalizador lógico: se for TRUE, então as elipses serão sombreadas 
+# em relação à sua densidade
+
+# labels=5 --> as elipses são rotuladas no gráfico e os pontos podem ser identificados.
+
+# lines=0 --> nenhuma linha de distância aparecerá no gráfico
+
+clusplot(dados_clientes_v1, dados_clientes_v1$Cluster, color=TRUE, shade=TRUE, labels=5, lines=0)
+
