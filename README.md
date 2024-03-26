@@ -2,8 +2,6 @@
 
 **Descrição:**
 
-# Lembrando meu Primeiro Projeto em Aprendizagem Não Supervisionada. 
-
 Este projeto fornece um guia detalhado sobre como segmentar consumidores para campanhas personalizadas de marketing. Usamos 
  a Linguagem R para este Projeto e o Algoritmo K-means de aprendizagem não supervisionada.
  Abordamos os seguintes tópicos:
